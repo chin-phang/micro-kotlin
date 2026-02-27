@@ -1,0 +1,35 @@
+server:
+  port: 8881
+
+spring:
+  application:
+    name: auth-service
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/micro_kotlin
+    username: postgres
+    password: password
+    pool:
+      initial-size: 5
+      max-size: 20
+
+#management:
+#  otlp:
+#    metrics:
+#      export:
+#        url: http://localhost:4318/v1/metrics
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#  opentelemetry:
+#    tracing:
+#      export:
+#        otlp:
+#          endpoint: http://localhost:4318/v1/traces
+#    logging:
+#      export:
+#        logback:
+#          endpoint: http://localhost:4318/v1/logs
+#    resource-attributes:
+#      service.name: "auth-service-webflux"
+#      deployment.environment: "dev"

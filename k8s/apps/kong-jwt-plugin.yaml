@@ -1,0 +1,13 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: kong-jwt-plugin
+  namespace: apps
+plugin: jwt
+config:
+  # Extract token from "Authorization: Bearer <token>"
+  header_names: ["Authorization"]
+  # Do not allow anonymous users (reject 401 if missing)
+  anonymous: null
+  # Ensure the issuer claim (iss) matches if your auth-service sets it
+  # key_claim_name: "iss"

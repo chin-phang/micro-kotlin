@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-user-table
+      author: aaron.lee
+      changes:
+        - createTable:
+            tableName: app_user
+            columns:
+              - column: { name: id, type: bigserial, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: username, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: password, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: email, type: varchar(100), constraints: { nullable: false, unique: true } }
+              - column: { name: enabled, type: smallint, defaultValue: 1, constraints: { nullable: false } }
+              - &audit_created_at
+                column: { name: created_at, type: timestamp, defaultValueComputed: current_timestamp, constraints: { nullable: false, unique: true } }
+              - &audit_created_by
+                column: { name: created_by, type: varchar(50), constraints: { nullable: false, unique: true } }
+              - &audit_last_modified_at
+                column: { name: last_modified_at, type: timestamp }
+              - &audit_last_modified_by
+                column: { name: last_modified_by, type: varchar(50) }
+
+  - changeSet:
+      id: create-role-table
+      author: aaron.lee
+      changes:
+        - createTable:
+            tableName: role
+            columns:
+              - column: { name: id, type: bigserial, constraints: { primaryKey: true } }
+              - column: { name: name, type: varchar(50), constraints: { nullable: false, unique: true } }
+              - *audit_created_at
+              - *audit_created_by
+              - *audit_last_modified_at
+              - *audit_last_modified_by
+
+  - changeSet:
+      id: create-user-role-table
+      author: aaron.lee
+      changes:
+        - createTable:
+            tableName: user_role
+            columns:
+              - column: { name: id, type: bigserial, constraints: { primaryKey: true } }
+              - column: { name: user_id, type: bigserial, constraints: { nullable: false, foreignKeyName: fk_user_role_user_id, references: app_user(id) } }
+              - column: { name: role_id, type: bigserial, constraints: { nullable: false, foreignKeyName: fk_user_role_role_id, references: role(id) } }
+              - *audit_created_at
+              - *audit_created_by
+              - *audit_last_modified_at
+              - *audit_last_modified_by
+        - addUniqueConstraint:
+            tableName: user_role
+            columnNames: user_id, role_id
+            constraintName: uq_user_id_role_id

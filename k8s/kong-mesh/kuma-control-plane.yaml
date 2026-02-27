@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuma-control-plane
+  namespace: kong-mesh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuma-control-plane
+  template:
+    metadata:
+      labels:
+        app: kuma-control-plane
+    spec:
+      containers:
+        - name: kuma-control-plane
+          image: kumahq/kuma-cp:2.13.2
+          command: ["/usr/bin/kuma-cp"]
+          args: ["run"]
+          env:
+            - name: KUMA_STORE_TYPE
+              value: "memory"
+          ports:
+            - name: http-api
+              containerPort: 5681
+            - name: https-api
+              containerPort: 5682
+            - name: http-xds
+              containerPort: 5678
+            - name: https-xds
+              containerPort: 5679
+            - name: http-sds
+              containerPort: 5676
+            - name: https-sds
+              containerPort: 5677
+            - name: admin-server
+              containerPort: 9901
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5680
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 5680
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kuma-control-plane
+  namespace: kong-mesh
+spec:
+  selector:
+    app: kuma-control-plane
+  ports:
+    - name: http-api
+      port: 5681
+      targetPort: 5681
+    - name: https-api
+      port: 5682
+      targetPort: 5682
+    - name: http-xds
+      port: 5678
+      targetPort: 5678
+    - name: https-xds
+      port: 5679
+      targetPort: 5679
+    - name: http-sds
+      port: 5676
+      targetPort: 5676
+    - name: https-sds
+      port: 5677
+      targetPort: 5677
+    - name: admin-server
+      port: 9901
+      targetPort: 9901
+  type: ClusterIP

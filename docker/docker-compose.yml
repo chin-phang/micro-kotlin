@@ -1,0 +1,77 @@
+version: '3.8'
+
+name: micro-kotlin
+
+services:
+  # ----------------------------------------
+  # Artifact Repository
+  # ----------------------------------------
+  nexus:
+    image: sonatype/nexus3:latest
+    ports:
+      - "8081:8081"
+    networks:
+      - micro-kotlin-net
+    environment:
+      - NEXUS_SECURITY_RANDOMPASSWORD=false
+      - NEXUS_SECURITY_INITIAL_PASSWORD=password # For development only, use a strong password in production
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/repository/maven-snapshots/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ----------------------------------------
+  # Observability Stack
+  # ----------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    command: ["--config.file=/etc/prometheus.yaml"]
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus.yaml
+    ports:
+      - "9090:9090"
+    networks:
+      - micro-kotlin-net
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+      - "4317" # Internal OTLP grpc
+    networks:
+      - micro-kotlin-net
+
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/grafana-datasources.yaml
+    ports:
+      - "3000:3000"
+    networks:
+      - micro-kotlin-net
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+# ----------------------------------------
+# Volumes & Networks
+# ----------------------------------------
+networks:
+  micro-kotlin-net:
+    driver: bridge

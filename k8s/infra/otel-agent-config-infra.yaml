@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-agent-infra-conf
+  namespace: infra
+data:
+  otel-agent-infra.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+    exporters:
+      otlp:
+        endpoint: "otel-collector-gateway.infra.svc.cluster.local:4317" # Send to internal Gateway
+        tls:
+          insecure: true
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          exporters: [otlp]
+        traces:
+          receivers: [otlp]
+          exporters: [otlp]

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: otel-agent-infra
+  namespace: infra
+spec:
+  selector:
+    matchLabels:
+      app: otel-agent-infra
+  template:
+    metadata:
+      labels:
+        app: otel-agent-infra
+    spec:
+      containers:
+        - name: otel-agent-infra
+          image: otel/opentelemetry-collector-contrib:0.91.0
+          args: ["--config=/etc/otel-agent-infra.yaml"]
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-agent-infra.yaml
+              subPath: otel-agent-infra.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: otel-agent-infra-conf

@@ -1,0 +1,81 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: micro-kotlin
+build:
+  artifacts:
+    - image: app-ui
+      context: app-ui
+      docker:
+        dockerfile: Dockerfile
+    - image: auth-service
+      context: auth-service
+      docker:
+        dockerfile: Dockerfile
+
+manifests:
+  rawYaml:
+    # Namespaces
+    - "k8s/infra/namespace-infra.yaml"
+    - "k8s/apps/namespace-apps.yaml"
+    - "k8s/kong/namespace-kong.yaml"
+    - "k8s/kong-mesh/namespace-kong-mesh.yaml"
+    # Infrastructure
+    - "k8s/infra/postgres-secret.yaml"
+    - "k8s/infra/postgres.yaml"
+    - "k8s/infra/rabbitmq-secret.yaml"
+    - "k8s/infra/rabbitmq.yaml"
+    - "k8s/infra/redis.yaml"
+    - "k8s/infra/kafka.yaml"
+    - "k8s/infra/otel-gateway-config.yaml"
+    - "k8s/infra/otel-gateway.yaml"
+    - "k8s/infra/otel-agent-config-infra.yaml"
+    - "k8s/infra/otel-agent-infra.yaml"
+    # Kong
+    - "k8s/kong/kong.yaml"
+    # Kong Mesh
+    - "k8s/kong-mesh/kuma-control-plane.yaml"
+    # Apps
+    - "k8s/apps/otel-agent-config-apps.yaml"
+    - "k8s/apps/otel-agent-apps.yaml"
+    - "k8s/apps/app-ui.yaml"
+    - "k8s/apps/kong-ingress.yaml"
+    - "k8s/apps/kong-jwt-secret.yaml"
+    - "k8s/apps/kong-jwt-plugin.yaml"
+    - "k8s/apps/kong-jwt-consumer.yaml"
+    - "k8s/apps/auth-service.yaml"
+
+deploy:
+  kubectl: {}
+
+portForward:
+  - resourceType: service
+    resourceName: postgres
+    namespace: infra
+    port: 5432
+    localPort: 5432
+  - resourceType: service
+    resourceName: kong-proxy
+    namespace: kong
+    port: 80
+    localPort: 8080
+  - resourceType: service
+    resourceName: redis
+    namespace: infra
+    port: 6379
+    localPort: 6379
+  - resourceType: service
+    resourceName: rabbitmq
+    namespace: infra
+    port: 5672
+    localPort: 5672
+  - resourceType: service
+    resourceName: rabbitmq
+    namespace: infra
+    port: 15672
+    localPort: 15672
+  - resourceType: service
+    resourceName: kafka
+    namespace: infra
+    port: 9092
+    localPort: 9092

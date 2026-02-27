@@ -1,0 +1,53 @@
+# --- OpenTelemetry Collector ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-gateway
+  namespace: infra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-gateway
+  template:
+    metadata:
+      labels:
+        app: otel-gateway
+    spec:
+      containers:
+        - name: otel-gateway
+          image: otel/opentelemetry-collector-contrib:0.91.0
+          args: [ "--config=/etc/otel-gateway.yaml" ]
+          volumeMounts:
+            - name: otel-gateway-vol
+              mountPath: /etc/otel-gateway.yaml
+              subPath: otel-gateway.yaml
+          ports:
+            - containerPort: 4317 # OTLP gRPC receiver
+            - containerPort: 4318 # OTLP HTTP receiver
+            - containerPort: 8889 # Prometheus scrape endpoint
+      volumes:
+        - name: otel-gateway-vol
+          configMap:
+            name: otel-gateway-conf
+            items:
+              - key: "otel-gateway.yaml"
+                path: "otel-gateway.yaml"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-gateway
+  namespace: infra
+spec:
+  type: NodePort
+  ports:
+    - port: 4317
+      targetPort: 4317
+      name: otlp-grpc
+    - port: 8889
+      targetPort: 8889
+      nodePort: 30889 # External Prometheus scrapes this
+      name: prometheus-scrape
+  selector:
+    app: otel-gateway
