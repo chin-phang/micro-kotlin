@@ -1,0 +1,97 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: micro-kotlin
+build:
+  artifacts:
+    - image: app-ui
+      context: app-ui
+      docker:
+        dockerfile: Dockerfile
+    - image: auth-service
+      context: auth-service
+      docker:
+        dockerfile: Dockerfile
+
+manifests:
+  rawYaml:
+    # Namespaces
+    - "k8s/infra/namespace-infra.yaml"
+    - "k8s/apps/namespace-apps.yaml"
+    - "k8s/kong/namespace-kong.yaml"
+    - "k8s/kong-mesh/namespace-kong-mesh.yaml"
+    # Service Accounts
+    - "k8s/kong/kong-controller-serviceaccount.yaml"
+    - "k8s/kong/kong-proxy-serviceaccount.yaml"
+    # Infrastructure
+    - "k8s/infra/postgres-secret.yaml"
+    - "k8s/infra/postgres.yaml"
+    - "k8s/infra/rabbitmq-secret.yaml"
+    - "k8s/infra/rabbitmq.yaml"
+    - "k8s/infra/redis-secret.yaml"
+    - "k8s/infra/redis.yaml"
+    - "k8s/infra/kafka.yaml"
+    - "k8s/infra/otel-gateway-config.yaml"
+    - "k8s/infra/otel-gateway.yaml"
+    - "k8s/infra/otel-agent-config-infra.yaml"
+    - "k8s/infra/otel-agent-infra.yaml"
+    # Kong
+    - "k8s/kong/kong.yaml"
+    - "k8s/kong/kong-controller.yaml"
+    # Kong Mesh
+    - "k8s/kong-mesh/kuma-control-plane.yaml"
+    # Apps
+    - "k8s/apps/otel-agent-config-apps.yaml"
+    - "k8s/apps/otel-agent-apps.yaml"
+    - "k8s/apps/app-ui.yaml"
+    - "k8s/apps/auth-service.yaml"
+    - "k8s/apps/kong-ingress.yaml"
+    - "k8s/apps/kong-jwt-secret.yaml"
+    - "k8s/apps/kong-jwt-plugin.yaml"
+    - "k8s/apps/kong-jwt-consumer.yaml"
+
+deploy:
+  kubectl:
+    hooks:
+      before:
+        - host:
+            command: ["kubectl", "apply", "-f", "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml"]
+        - host:
+            command: ["kubectl", "apply", "-k", "https://github.com/Kong/kubernetes-ingress-controller/config/crd?ref=v3.4.11"]
+
+portForward:
+  - resourceType: service
+    resourceName: postgres
+    namespace: infra
+    port: 5432
+    localPort: 5432
+  - resourceType: service
+    resourceName: kong-admin
+    namespace: kong
+    port: 8001
+    localPort: 8001
+  - resourceType: service
+    resourceName: kong-proxy
+    namespace: kong
+    port: 8000
+    localPort: 8000
+  - resourceType: service
+    resourceName: redis
+    namespace: infra
+    port: 6379
+    localPort: 6379
+  - resourceType: service
+    resourceName: rabbitmq
+    namespace: infra
+    port: 15672
+    localPort: 15672
+  - resourceType: service
+    resourceName: kafka
+    namespace: infra
+    port: 9094
+    localPort: 9094
+  - resourceType: service
+    resourceName: app-ui
+    namespace: apps
+    port: 5173
+    localPort: 5173  

@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: auth/changelog-auth.yaml
+      relativeToChangelogFile: true
+#  - include:
+#      file: job/changelog-job.yaml
+#      relativeToChangelogFile: true

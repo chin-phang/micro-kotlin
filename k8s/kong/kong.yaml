@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  namespace: kong
+  labels:
+    app: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong
+  template:
+    metadata:
+      labels:
+        app: kong
+    spec:
+      serviceAccountName: kong-proxy
+      containers:
+        - name: kong
+          image: kong:3.9-ubuntu
+          env:
+            - name: KONG_DATABASE
+              value: "off"
+            - name: KONG_KIC
+              value: "on"
+            - name: KONG_PROXY_ACCESS_LOG
+              value: "/dev/stdout"
+            - name: KONG_ADMIN_ACCESS_LOG
+              value: "/dev/stdout"
+            - name: KONG_PROXY_ERROR_LOG
+              value: "/dev/stderr"
+            - name: KONG_ADMIN_ERROR_LOG
+              value: "/dev/stderr"
+            - name: KONG_ADMIN_LISTEN
+              value: "0.0.0.0:8001,0.0.0.0:8444 ssl"
+            - name: KONG_PROXY_LISTEN
+              value: "0.0.0.0:8000,0.0.0.0:8443 ssl"
+            - name: KONG_STATUS_LISTEN
+              value: "0.0.0.0:8100"
+          ports:
+            - name: proxy-http
+              containerPort: 8000
+            - name: proxy-https
+              containerPort: 8443
+            - name: admin-http
+              containerPort: 8001
+            - name: admin-https
+              containerPort: 8444
+            - name: status
+              containerPort: 8100
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 8100
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 8100
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: kong
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+spec:
+  controller: ingress-controllers.konghq.com/kong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-admin
+  namespace: kong
+spec:
+  type: ClusterIP
+  selector:
+    app: kong
+  ports:
+    - name: admin-ssl
+      port: 8444
+      targetPort: 8444
+    - name: admin-http
+      port: 8001
+      targetPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-proxy
+  namespace: kong
+spec:
+  type: NodePort
+  selector:
+    app: kong
+  ports:
+    - name: proxy
+      port: 8000
+      targetPort: 8000
+    - name: proxy-ssl
+      port: 8443
+      targetPort: 8443

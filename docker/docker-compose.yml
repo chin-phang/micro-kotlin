@@ -1,0 +1,91 @@
+version: '3.8'
+
+name: micro-kotlin
+
+services:
+  # ----------------------------------------
+  # Artifact Repository
+  # ----------------------------------------
+  redpanda-console:
+    image: redpandadata/console:latest
+    environment:
+      - KAFKA_BROKERS=host.docker.internal:9094
+    ports:
+      - "18080:8080"
+    networks:
+      - micro-kotlin-net
+
+  # ----------------------------------------
+  # Artifact Repository
+  # ----------------------------------------
+  nexus:
+    image: sonatype/nexus3:latest
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/repository/maven-snapshots/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      - NEXUS_SECURITY_RANDOMPASSWORD=false
+      - NEXUS_SECURITY_INITIAL_PASSWORD=password # For development only, use a strong password in production
+    ports:
+      - "8081:8081"
+    networks:
+      - micro-kotlin-net
+
+  # ----------------------------------------
+  # Observability Stack
+  # ----------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    command: ["--config.file=/etc/prometheus.yaml"]
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus.yaml
+    ports:
+      - "9090:9090"
+    networks:
+      - micro-kotlin-net
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+      - "4317:4317" # OTLP grpc (mapped to host for k8s otel-gateway)
+    networks:
+      - micro-kotlin-net
+
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - micro-kotlin-net
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/grafana-datasources.yaml
+    ports:
+      - "3000:3000"
+    networks:
+      - micro-kotlin-net
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+# ----------------------------------------
+# Volumes & Networks
+# ----------------------------------------
+networks:
+  micro-kotlin-net:
+    driver: bridge

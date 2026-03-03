@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-controller
+  namespace: kong
+  labels:
+    app: kong-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong-controller
+  template:
+    metadata:
+      labels:
+        app: kong-controller
+    spec:
+      serviceAccountName: kong-controller
+      initContainers:
+        - name: wait-for-kong-admin
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              until wget -qO- http://kong-admin.kong.svc.cluster.local:8001/status; do
+                echo "Waiting for Kong admin API..."; sleep 5;
+              done
+      containers:
+        - name: ingress-controller
+          image: kong/kubernetes-ingress-controller:3.4
+          env:
+            - name: CONTROLLER_KONG_ADMIN_URL
+              value: "http://kong-admin.kong.svc.cluster.local:8001"
+            - name: CONTROLLER_KONG_ADMIN_TLS_SKIP_VERIFY
+              value: "true"
+            - name: CONTROLLER_PUBLISH_SERVICE
+              value: "kong/kong-proxy"
+            - name: CONTROLLER_WATCH_NAMESPACE
+              value: "apps"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 10254
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 10254
+            initialDelaySeconds: 30
+            periodSeconds: 10

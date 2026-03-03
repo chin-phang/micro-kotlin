@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: aaron.lee
+      changes:
+        - createTable:
+            tableName: job
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: origin
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: destination
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: weight
+                  type: decimal(10, 2)
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: varchar(50)
+                  defaultValue: "system"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_modified_at
+                  type: timestamp
+              - column:
+                  name: last_modified_by
+                  type: varchar(50)
