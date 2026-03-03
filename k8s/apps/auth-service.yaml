@@ -19,8 +19,18 @@ spec:
           env:
             - name: SPRING_R2DBC_URL
               value: r2dbc:postgresql://postgres.infra:5432/micro_kotlin
-            - name: SPRING_REDIS_HOST
+            - name: SPRING_R2DBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-credential
+                  key: DB_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
               value: redis.infra
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-credential
+                  key: REDIS_PASSWORD
           ports:
             - containerPort: 8881
 ---

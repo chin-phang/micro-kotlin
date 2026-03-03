@@ -37,7 +37,7 @@ spec:
             - name: CONTROLLER_PUBLISH_SERVICE
               value: "kong/kong-proxy"
             - name: CONTROLLER_WATCH_NAMESPACE
-              value: "apps"
+              value: "apps,kong"
           readinessProbe:
             httpGet:
               path: /readyz

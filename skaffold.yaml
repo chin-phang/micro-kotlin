@@ -44,6 +44,7 @@ manifests:
     - "k8s/apps/otel-agent-config-apps.yaml"
     - "k8s/apps/otel-agent-apps.yaml"
     - "k8s/apps/app-ui.yaml"
+    - "k8s/apps/auth-service-secret.yaml"
     - "k8s/apps/auth-service.yaml"
     - "k8s/apps/kong-ingress.yaml"
     - "k8s/apps/kong-jwt-secret.yaml"
