@@ -5,6 +5,11 @@ spring:
   application:
     name: auth-service
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/micro_kotlin
     username: postgres
@@ -12,6 +17,12 @@ spring:
     pool:
       initial-size: 5
       max-size: 20
+
+jwt:
+  # Base64-encoded secret, minimum 32 bytes for HS256. Override via env: JWT_SECRET
+  secret: "bXktc3VwZXItc2VjcmV0LWtleS1mb3ItanctdG9rZW4tMjU2Yml0cw=="
+  access-token-expiry: 900       # 15 minutes (seconds)
+  refresh-token-expiry: 604800   # 7 days (seconds)
 
 management:
   endpoints:

@@ -9,5 +9,3 @@ config:
   header_names: ["Authorization"]
   # Do not allow anonymous users (reject 401 if missing)
   anonymous: null
-  # Ensure the issuer claim (iss) matches if your auth-service sets it
-  # key_claim_name: "iss"

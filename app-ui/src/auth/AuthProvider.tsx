@@ -1,8 +1,9 @@
-import { useRef, useImperativeHandle, useState } from 'react'
+import { useRef, useImperativeHandle, useEffect } from 'react'
 import AuthContext from './AuthContext'
 import appConfig from '@/configs/app.config'
-import { useSessionUser, useToken } from '@/store/authStore'
-import { apiSignIn, apiSignOut, apiSignUp } from '@/services/AuthService'
+import { useSessionUser } from '@/store/authStore'
+import { apiSignIn, apiSignOut, apiSignUp, apiRefresh } from '@/services/AuthService'
+import { setAccessToken, getAccessToken } from '@/services/tokenMemoryStore'
 import { REDIRECT_URL_KEY } from '@/constants/app.constant'
 import { useNavigate } from 'react-router'
 import type {
@@ -11,7 +12,6 @@ import type {
     AuthResult,
     OauthSignInCallbackPayload,
     User,
-    Token,
 } from '@/@types/auth'
 import type { ReactNode, Ref } from 'react'
 import type { NavigateFunction } from 'react-router'
@@ -41,12 +41,28 @@ function AuthProvider({ children }: AuthProviderProps) {
     const setSessionSignedIn = useSessionUser(
         (state) => state.setSessionSignedIn,
     )
-    const { token, setToken } = useToken()
-    const [tokenState, setTokenState] = useState(token)
 
-    const authenticated = Boolean(tokenState && signedIn)
+    const authenticated = signedIn
 
     const navigatorRef = useRef<IsolatedNavigatorRef>(null)
+
+    // On page load, if the user was previously signed in, restore the access token
+    // from the refresh cookie via a silent refresh call.
+    useEffect(() => {
+        if (signedIn && !getAccessToken()) {
+            apiRefresh()
+                .then((resp) => {
+                    if (resp?.accessToken) {
+                        setAccessToken(resp.accessToken)
+                    }
+                })
+                .catch(() => {
+                    setUser({})
+                    setSessionSignedIn(false)
+                })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const redirect = () => {
         const search = window.location.search
@@ -58,18 +74,18 @@ function AuthProvider({ children }: AuthProviderProps) {
         )
     }
 
-    const handleSignIn = (tokens: Token, user?: User) => {
-        setToken(tokens.accessToken)
-        setTokenState(tokens.accessToken)
+    const handleSignIn = (user?: User, accessToken?: string) => {
         setSessionSignedIn(true)
-
         if (user) {
             setUser(user)
+        }
+        if (accessToken) {
+            setAccessToken(accessToken)
         }
     }
 
     const handleSignOut = () => {
-        setToken('')
+        setAccessToken(null)
         setUser({})
         setSessionSignedIn(false)
     }
@@ -78,7 +94,15 @@ function AuthProvider({ children }: AuthProviderProps) {
         try {
             const resp = await apiSignIn(values)
             if (resp) {
-                handleSignIn({ accessToken: resp.token }, resp.user)
+                handleSignIn(
+                    {
+                        userId: String(resp.userId),
+                        userName: resp.userName,
+                        email: resp.email,
+                        authority: resp.authority,
+                    },
+                    resp.accessToken,
+                )
                 redirect()
                 return {
                     status: 'success',
@@ -102,7 +126,15 @@ function AuthProvider({ children }: AuthProviderProps) {
         try {
             const resp = await apiSignUp(values)
             if (resp) {
-                handleSignIn({ accessToken: resp.token }, resp.user)
+                handleSignIn(
+                    {
+                        userId: String(resp.userId),
+                        userName: resp.userName,
+                        email: resp.email,
+                        authority: resp.authority,
+                    },
+                    resp.accessToken,
+                )
                 redirect()
                 return {
                     status: 'success',
@@ -130,6 +162,7 @@ function AuthProvider({ children }: AuthProviderProps) {
             navigatorRef.current?.navigate('/')
         }
     }
+
     const oAuthSignIn = (
         callback: (payload: OauthSignInCallbackPayload) => void,
     ) => {

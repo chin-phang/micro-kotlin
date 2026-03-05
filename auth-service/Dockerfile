@@ -3,7 +3,7 @@ FROM gradle:9.3.1-jdk25 AS builder
 WORKDIR /app
 COPY . .
 # Build the JAR
-RUN gradle bootJar --no-daemon
+RUN ./gradlew bootJar --no-daemon
 
 # Stage 2: Create the final image
 FROM eclipse-temurin:25-jre

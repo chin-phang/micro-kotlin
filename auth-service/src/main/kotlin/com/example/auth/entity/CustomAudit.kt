@@ -1,6 +1,6 @@
-package com.example.shared.common.domain
+package com.example.auth.entity
 
-import jakarta.persistence.Column
+import org.springframework.data.relational.core.mapping.Column
 import java.time.Instant
 
 abstract class CustomAudit(
@@ -14,5 +14,5 @@ abstract class CustomAudit(
     open val lastModifiedAt: Instant? = null,
 
     @Column("last_modified_by")
-    open val lastModifiedBy: String? = null
+    open val lastModifiedBy: String? = null,
 )

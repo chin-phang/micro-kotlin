@@ -25,6 +25,13 @@ export async function apiSignUp(data: SignUpCredential) {
     })
 }
 
+export async function apiRefresh() {
+    return ApiService.fetchDataWithAxios<SignInResponse>({
+        url: endpointConfig.refresh,
+        method: 'post',
+    })
+}
+
 export async function apiSignOut() {
     return ApiService.fetchDataWithAxios({
         url: endpointConfig.signOut,

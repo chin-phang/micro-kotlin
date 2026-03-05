@@ -11,9 +11,19 @@ description = "Authentication Service"
 
 repositories {
 	mavenCentral()
+	maven {
+		name = "nexus"
+		url = uri("http://localhost:8081/repository/maven-snapshots/")
+		isAllowInsecureProtocol = true
+		credentials {
+			username = "admin"
+			password = "password"
+		}
+	}
 }
 
 dependencies {
+//	implementation("com.example:shared-common:0.0.1-SNAPSHOT")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 //	implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
 	implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.24.0-alpha")
@@ -25,6 +35,9 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("tools.jackson.module:jackson-module-kotlin")
+	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
