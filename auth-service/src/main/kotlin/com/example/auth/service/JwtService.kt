@@ -20,6 +20,7 @@ class JwtService(
         val now = Date()
         return Jwts.builder()
             .subject(userId.toString())
+            .issuer("micro-kotlin-issuer")
             .claim("username", username)
             .claim("roles", roles)
             .issuedAt(now)

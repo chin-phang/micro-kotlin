@@ -3,7 +3,7 @@ import type { AxiosError } from 'axios'
 
 const unauthorizedCode = [401, 419, 440]
 
-const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
+const AxiosResponseInterceptorErrorCallback = (error: AxiosError) => {
     const { response } = error
 
     if (response && unauthorizedCode.includes(response.status)) {
@@ -12,4 +12,4 @@ const AxiosResponseIntrceptorErrorCallback = (error: AxiosError) => {
     }
 }
 
-export default AxiosResponseIntrceptorErrorCallback
+export default AxiosResponseInterceptorErrorCallback
