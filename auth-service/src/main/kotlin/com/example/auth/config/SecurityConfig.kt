@@ -9,7 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
-import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRequestAttributeHandler
+import org.springframework.security.web.server.csrf.XorServerCsrfTokenRequestAttributeHandler
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
 
 @Configuration
@@ -26,7 +26,7 @@ class SecurityConfig {
                 // Store CSRF token in a JS-readable cookie (XSRF-TOKEN).
                 // Axios reads it automatically and sends it as X-XSRF-TOKEN header.
                 csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())
-                csrf.csrfTokenRequestHandler(CookieServerCsrfTokenRequestAttributeHandler())
+                csrf.csrfTokenRequestHandler(XorServerCsrfTokenRequestAttributeHandler())
                 // Sign-in and sign-up are exempt: the client has no session yet and therefore
                 // no CSRF cookie. All other state-changing requests require the XSRF token.
                 csrf.requireCsrfProtectionMatcher(ServerWebExchangeMatcher { exchange ->
